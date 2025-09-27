@@ -1,5 +1,5 @@
 import { RenderMounted } from "@/components/render-mounted";
-import { Sidebar } from "@/components/sidebar";
+import { Sidebar } from "@/components/admin/sidebar";
 import { ADMIN } from "@/constants/constants";
 import { createClient } from "@/supabase/server";
 import { redirect } from "next/navigation";

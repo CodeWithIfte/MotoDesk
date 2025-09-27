@@ -55,6 +55,7 @@
         "postcss": "^8",
         "tailwindcss": "^4",
         "tw-animate-css": "^1.4.0",
-        "typescript": "^5"
+        "typescript": "^5",
+        "@repo/types": "workspace:*"
     }
 }
