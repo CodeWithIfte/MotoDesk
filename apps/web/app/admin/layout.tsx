@@ -1,6 +1,5 @@
-import { Footer } from "@/components/footer";
-import { Header } from "@/components/header";
 import { RenderMounted } from "@/components/render-mounted";
+import { Sidebar } from "@/components/sidebar";
 import { ADMIN } from "@/constants/constants";
 import { createClient } from "@/supabase/server";
 import { redirect } from "next/navigation";
@@ -27,14 +26,17 @@ export default async function AdminLayout({
             return;
         }
 
-        if (data.role === ADMIN) return redirect("/");
+        if (data.role !== ADMIN) return redirect("/");
     }
 
     return (
         <RenderMounted>
-            <Header />
-            <main className="min-h-[calc(100svh-128px)] py-3">{children}</main>
-            <Footer />
+            <div className="flex h-screen bg-background">
+                <Sidebar />
+                <main className="flex-1 overflow-auto">
+                  {children}
+                </main>
+            </div>
         </RenderMounted>
     );
 }

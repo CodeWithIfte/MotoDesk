@@ -23,6 +23,7 @@ export default async function AuthLayout({
             console.log("Error fetching user data", error);
             return;
         }
+        console.log("Auth data", data);
 
         if (data.role === ADMIN) return redirect("/admin");
     }
