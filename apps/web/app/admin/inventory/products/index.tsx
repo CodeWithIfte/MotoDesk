@@ -27,10 +27,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Plus, Search, Filter, Eye, Edit, Package } from "lucide-react";
+import { getStatusColor } from "../utils";
+import { Category } from "../categories/types";
+import { ProductWithCategory } from "./types";
 const products = [
     // Motorcycles
     {
@@ -243,8 +246,19 @@ const products = [
         updatedDate: "2024-01-15",
     },
 ];
-export const Products = ({ productCategories }: any) => {
-    const getStockStatus = (product: any) => {
+export const Products = ({
+    productCategories,
+}: {
+    productCategories: Category[];
+}) => {
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [isAddProductOpen, setIsAddProductOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [categoryFilter, setCategoryFilter] = useState("all");
+
+    const getStockStatus = (product: ProductWithCategory) => {
         const { currentStock, minStock, reorderLevel } = product.inventory;
         if (currentStock <= minStock)
             return { status: "critical", color: "destructive" };
@@ -426,6 +440,7 @@ export const Products = ({ productCategories }: any) => {
                     })}
                 </div>
             </TabsContent>
+
             {/* Add Product Dialog */}
             <Dialog open={isAddProductOpen} onOpenChange={setIsAddProductOpen}>
                 <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">

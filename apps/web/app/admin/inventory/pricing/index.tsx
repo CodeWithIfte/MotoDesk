@@ -1,3 +1,9 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { TabsContent } from "@/components/ui/tabs";
+import { Edit } from "lucide-react";
+
 export const Pricing = () => {
     return (
         <TabsContent value="pricing" className="space-y-4">

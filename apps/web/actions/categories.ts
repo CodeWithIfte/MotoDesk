@@ -1,123 +1,62 @@
-'use server';
+import { Category, SubCategory } from "@/app/admin/inventory/categories/types";
+import { createClient } from "@/supabase/server";
 
-import slugify from 'slugify';
+export async function getCategories(): Promise<Category[]> {
+    const supabase = await createClient();
 
-import { CategoriesWithProductsResponse } from '@/app/admin/categories/categories.types';
-import {
-    CreateCategorySchemaServer,
-    UpdateCategorySchema,
-} from '@/app/admin/categories/create-category.schema';
-import { createClient } from '@/supabase/server';
-import { revalidatePath } from 'next/cache';
+    // fetch categories with counts directly from view
+    const { data: categories, error } = await supabase
+        .from("categories_with_counts")
+        .select("*");
 
-export const getCategoriesWithProducts =
-    async (): Promise<CategoriesWithProductsResponse> => {
-        const supabase = createClient();
-        const { data, error } = await supabase
-            .from('category')
-            .select('* , products:product(*)')
-            .returns<CategoriesWithProductsResponse>();
-
-        if (error) throw new Error(`Error fetching categories: ${error.message}`);
-
-        return data || [];
-    };
-
-export const imageUploadHandler = async (formData: FormData) => {
-    const supabase = createClient();
-    if (!formData) return;
-
-    const fileEntry = formData.get('file');
-
-    if (!(fileEntry instanceof File)) throw new Error('Expected a file');
-
-    const fileName = fileEntry.name;
-
-    try {
-        const { data, error } = await supabase.storage
-            .from('app-images')
-            .upload(fileName, fileEntry, {
-                cacheControl: '3600',
-                upsert: false,
-            });
-
-        if (error) {
-            console.error('Error uploading image:', error);
-            throw new Error('Error uploading image');
-        }
-
-        const {
-            data: { publicUrl },
-        } = await supabase.storage.from('app-images').getPublicUrl(data.path);
-
-        return publicUrl;
-    } catch (error) {
-        console.error('Error uploading image:', error);
-        throw new Error('Error uploading image');
+    if (error) {
+        console.error("Error fetching categories with counts:", error);
+        return [];
     }
-};
 
-export const createCategory = async ({
-    imageUrl,
-    name,
-}: CreateCategorySchemaServer) => {
-    const supabase = createClient();
-    const slug = slugify(name, { lower: true });
+    // static parent categories
+    const parentCategories: Omit<Category, "subCategories">[] = [
+        {
+            id: "motorcycles",
+            name: "Motorcycles",
+            description: "Complete motorcycle units",
+            productCount: 0
+        },
+        {
+            id: "parts",
+            name: "Spare Parts",
+            description: "Motorcycle spare parts and components",
+            productCount: 0
+        },
+        {
+            id: "accessories",
+            name: "Accessories",
+            description: "Motorcycle accessories and add-ons",
+            productCount: 0
+        }
+    ];
 
-    const { data, error } = await supabase.from('category').insert({
-        name,
-        imageUrl,
-        slug,
+    // group subcategories under their parent
+    const result: Category[] = parentCategories.map((parent) => {
+        const subCategories: SubCategory[] = (categories || [])
+            .filter((item) => item.parent_category === parent.id)
+            .map((item) => ({
+                id: item.id || "",
+                name: item.name || "",
+                description: item.description || "",
+                parent_category: item.parent_category || "",
+                productCount: item.product_count || 0,
+                created_at: item.created_at || "",
+            }));
+
+        const total = subCategories.reduce((sum, sc) => sum + sc.productCount, 0);
+
+        return {
+            ...parent,
+            subCategories,
+            productCount: total
+        };
     });
 
-    if (error) throw new Error(`Error creating category: ${error.message}`);
-
-    revalidatePath('/admin/categories');
-
-    return data;
-};
-
-export const updateCategory = async ({
-    imageUrl,
-    name,
-    slug,
-}: UpdateCategorySchema) => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('category')
-        .update({ name, imageUrl })
-        .match({ slug });
-
-    if (error) throw new Error(`Error updating category: ${error.message}`);
-
-    revalidatePath('/admin/categories');
-
-    return data;
-};
-
-export const deleteCategory = async (id: number) => {
-    const supabase = createClient();
-    const { error } = await supabase.from('category').delete().match({ id });
-
-    if (error) throw new Error(`Error deleting category: ${error.message}`);
-
-    revalidatePath('/admin/categories');
-};
-
-export const getCategoryData = async () => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-        .from('category')
-        .select('name, products:product(id)');
-
-    if (error) throw new Error(`Error fetching category data: ${error.message}`);
-
-    const categoryData = data.map(
-        (category: { name: string; products: { id: number }[] }) => ({
-            name: category.name,
-            products: category.products.length,
-        })
-    );
-
-    return categoryData;
-};
+    return result;
+}

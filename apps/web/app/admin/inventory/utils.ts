@@ -1,3 +1,5 @@
+
+
 export const getStatusColor = (status: string) => {
     switch (status) {
         case "active":
@@ -10,3 +12,4 @@ export const getStatusColor = (status: string) => {
             return "default";
     }
 };
+

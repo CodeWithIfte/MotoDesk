@@ -28,7 +28,7 @@ const navigation = [
         href: "/admin/dashboard",
         icon: LayoutDashboard,
     },
-    { name: "Products & Categories", href: "/admin/products", icon: Package }, // Added Products & Categories management before other modules
+    { name: "Inventory", href: "/admin/inventory", icon: Package }, // Added Products & Categories management before other modules
     { name: "Bike Sales", href: "/admin/bikes", icon: Bike },
     { name: "Purchase & Vendors", href: "/admin/purchase", icon: ShoppingCart },
     { name: "Parts & Accessories", href: "/admin/parts", icon: Package },
