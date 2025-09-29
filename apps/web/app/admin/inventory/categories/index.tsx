@@ -11,30 +11,59 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { TabsContent } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { Plus, Search, Eye, Edit } from "lucide-react";
-import { Category } from "./types";
+import { Category, SubCategory } from "./types";
+import { useForm } from "react-hook-form";
+import { categorySchema } from "./create.schema";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import { createCategory, updateCategory } from "@/actions/categories";
+import { AddCategoryForm } from "./add-category";
+import { EditCategory } from "./edit-category";
 
 export const Categories = ({ categories }: { categories: Category[] }) => {
     const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [editCatDialog, setEditCatDialog] = useState<string | null>(null);
+    const [editingCategory, setEditingCategory] = useState<SubCategory | null>(
+        null
+    );
 
+    const form = useForm<categorySchema>({
+        resolver: zodResolver(categorySchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            parent_category: "motorcycles",
+        },
+    });
+    const isSubmitting = form.formState.isSubmitting;
+    const handleCategorySubmit = async (data: categorySchema) => {
+        try {
+            setLoading(true);
+            if (editingCategory) {
+                // Update existing category
+                await updateCategory({ ...data, id: editingCategory.id });
+            } else {
+                // Create new category
+                await createCategory(data);
+            }
+            form.reset();
+            setEditingCategory(null);
+            setIsAddCategoryOpen(false);
+        } catch (error) {
+            console.error("Error submitting category:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleEditClick = (category: SubCategory) => {
+        setEditingCategory(category);
+        setIsAddCategoryOpen(true);
+    };
     return (
         <>
             <TabsContent value="categories" className="space-y-4">
@@ -133,7 +162,13 @@ export const Categories = ({ categories }: { categories: Category[] }) => {
                                         <Eye className="h-4 w-4 mr-1" />
                                         View Products
                                     </Button>
-                                    <Button variant="outline" size="sm">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                            setEditCatDialog(category.id)
+                                        }
+                                    >
                                         <Edit className="h-4 w-4 mr-1" />
                                         Edit
                                     </Button>
@@ -143,76 +178,26 @@ export const Categories = ({ categories }: { categories: Category[] }) => {
                     ))}
                 </div>
             </TabsContent>
-            {/* Add Category Dialog */}
-            <Dialog
-                open={isAddCategoryOpen}
-                onOpenChange={setIsAddCategoryOpen}
-            >
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Add New Category</DialogTitle>
-                        <DialogDescription>
-                            Create a new product category
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="category-name">
-                                    Category Name
-                                </Label>
-                                <Input
-                                    id="category-name"
-                                    placeholder="Sports Bikes"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="parent-category">
-                                    Parent Category
-                                </Label>
-                                <Select>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select parent (optional)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">
-                                            None (Root Category)
-                                        </SelectItem>
-                                        {categories.map((category) => (
-                                            <SelectItem
-                                                key={category.id}
-                                                value={category.id}
-                                            >
-                                                {category.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="category-description">
-                                Description
-                            </Label>
-                            <Textarea
-                                id="category-description"
-                                placeholder="Category description..."
-                            />
-                        </div>
-                        <div className="flex justify-end space-x-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => setIsAddCategoryOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button onClick={() => setIsAddCategoryOpen(false)}>
-                                Add Category
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+
+            <AddCategoryForm
+                form={form}
+                onSubmit={handleCategorySubmit}
+                isSubmitting={isSubmitting}
+                loading={loading}
+                onCancel={() => setIsAddCategoryOpen(false)}
+                isOpen={isAddCategoryOpen}
+                defaultValues={editingCategory ?? null}
+            />
+            <EditCategory
+                isOpen={!!editCatDialog}
+                onCancel={() => setEditCatDialog(null)}
+                title={editCatDialog || ""}
+                categories={
+                    categories.find((c) => c.id === editCatDialog)
+                        ?.subCategories || []
+                }
+                handleEditClick={handleEditClick}
+            />
         </>
     );
 };

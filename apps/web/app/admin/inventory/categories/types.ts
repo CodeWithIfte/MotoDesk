@@ -10,7 +10,7 @@ export type SubCategory = {
     id: string;
     name: string;
     description?: string;
-    parent_category: string;
+    parent_category: "motorcycles" | "parts" | "accessories";
     productCount: number;
     created_at: string;
 };
