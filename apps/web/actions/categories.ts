@@ -12,7 +12,7 @@ export async function getCategories(): Promise<Category[]> {
     // fetch categories with counts directly from view
     const { data: categories, error } = await supabase
         .from("categories_with_counts")
-        .select("*");
+        .select("*")
 
     if (error) {
         console.error("Error fetching categories with counts:", error);
@@ -23,8 +23,8 @@ export async function getCategories(): Promise<Category[]> {
     // group subcategories under their parent
     const result: Category[] = parentCategories.map((parent) => {
         const subCategories: SubCategory[] = (categories || [])
-            .filter((item) => item.parent_category === parent.id)
-            .map((item) => ({
+            .filter((item: SubCategory) => item.parent_category === parent.id)
+            .map((item: SubCategory & { product_count: number }) => ({
                 id: item.id || "",
                 name: item.name || "",
                 description: item.description || "",
