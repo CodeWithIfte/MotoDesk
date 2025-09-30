@@ -190,7 +190,10 @@ export const Categories = ({ categories }: { categories: Category[] }) => {
             />
             <EditCategory
                 isOpen={!!editCatDialog}
-                onCancel={() => setEditCatDialog(null)}
+                onCancel={() => {
+                    setEditCatDialog(null);
+                    setEditingCategory(null);
+                }}
                 title={editCatDialog || ""}
                 categories={
                     categories.find((c) => c.id === editCatDialog)

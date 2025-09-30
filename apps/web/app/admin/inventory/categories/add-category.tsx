@@ -48,6 +48,12 @@ export const AddCategoryForm = ({
     useEffect(() => {
         if (defaultValues) {
             form.reset(defaultValues);
+        } else {
+            form.reset({
+                name: "",
+                description: "",
+                parent_category: "motorcycles",
+            });
         }
     }, [defaultValues, form]);
     return (
