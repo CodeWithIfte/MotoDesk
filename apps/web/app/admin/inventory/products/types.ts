@@ -1,39 +1,24 @@
 import { SubCategory } from "../categories/types";
-
 export type ProductWithCategory = {
-    id: number;
+    id: string;
     name: string;
-    sku: string;
+    product_code: string;
     unit: string;
-    vendor: string,
-    branch: string,
-    brand: string;
+    brand: string,
     model: string;
-    cost_price: number;
+    purchase_price: number;
     selling_price: number;
     taxable: boolean;
     min_stock: number;
-    maxQuantity: number;
-    created_at: string;
+    status: string;
+    weight: string;
+    warranty: string;
+    manufacture_year: number;
+    maker_country: string;
     category: SubCategory;
+    created_at: string;
+    updated_at: string;
 };
 
 export type ProductsWithCategoriesResponse = ProductWithCategory[];
 
-export type UpdateProductSchema = {
-    id: number;
-    name: string;
-    sku: string;
-    unit: string;
-    vendor: string,
-    branch: string,
-    brand: string;
-    model: string;
-    cost_price: number;
-    selling_price: number;
-    taxable: boolean;
-    min_stock: number;
-    maxQuantity: number;
-    created_at: string;
-    category: number;
-};

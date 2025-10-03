@@ -48,7 +48,7 @@ export function ProductsManagement({ categories }: { categories: Category[] }) {
                     </TabsTrigger>
                     <TabsTrigger value="pricing">Pricing Rules</TabsTrigger>
                 </TabsList>
-                <Products productCategories={categories} />
+                <Products categories={categories} />
                 <Categories categories={categories} />
                 <Specifications />
                 <Pricing />

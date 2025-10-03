@@ -44,10 +44,8 @@ export const Categories = ({ categories }: { categories: Category[] }) => {
         try {
             setLoading(true);
             if (editingCategory) {
-                // Update existing category
                 await updateCategory({ ...data, id: editingCategory.id });
             } else {
-                // Create new category
                 await createCategory(data);
             }
             form.reset();

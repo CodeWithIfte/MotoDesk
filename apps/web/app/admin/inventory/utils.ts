@@ -15,6 +15,14 @@ export const getStatusColor = (status: string) => {
 };
 
 
+// const getStockStatus = (product: ProductWithCategory) => {
+//     const { currentStock, minStock, reorderLevel } = product.inventory;
+//     if (currentStock <= minStock)
+//         return { status: "critical", color: "destructive" };
+//     if (currentStock <= reorderLevel)
+//         return { status: "low", color: "secondary" };
+//     return { status: "good", color: "default" };
+// };
 
 export const parentCategories: Omit<Category, "subCategories">[] = [
     {

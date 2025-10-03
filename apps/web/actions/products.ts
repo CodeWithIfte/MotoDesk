@@ -1,99 +1,54 @@
 'use server';
 
-import slugify from 'slugify';
-
+import { ProductSchema } from '@/app/admin/inventory/products/schema';
+import { ProductWithCategory } from '@/app/admin/inventory/products/types';
 import { createClient } from '@/supabase/server';
-import {
-  ProductsWithCategoriesResponse,
-  UpdateProductSchema,
-} from '@/app/admin/products/products.types';
-import { CreateProductSchemaServer } from '@/app/admin/products/schema';
 import { revalidatePath } from 'next/cache';
 
-export const getProductsWithCategories =
-  async (): Promise<ProductsWithCategoriesResponse> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('product')
-      .select('*, category:category(*)')
-      .returns<ProductsWithCategoriesResponse>();
+export const getProductsWithCategory = async (): Promise<ProductWithCategory[]> => {
+  const supabase = await createClient();
 
-    if (error) {
-      throw new Error(`
-        Error fetching products with categories: ${error.message}`);
-    }
-
-    return data || [];
-  };
-
-export const createProduct = async ({
-  category,
-  heroImage,
-  images,
-  maxQuantity,
-  price,
-  title,
-}: CreateProductSchemaServer) => {
-  const supabase = createClient();
-  const slug = slugify(title, { lower: true });
-
-  const { data, error } = await supabase.from('product').insert({
-    category,
-    heroImage,
-    imagesUrl: images,
-    maxQuantity,
-    price,
-    slug,
-    title,
-  });
-
-  if (error) {
-    throw new Error(`Error creating product: ${error.message}`);
-  }
-
-  revalidatePath('/admin/products');
-
-  return data;
-};
-
-export const updateProduct = async ({
-  category,
-  heroImage,
-  imagesUrl,
-  maxQuantity,
-  price,
-  slug,
-  title,
-}: UpdateProductSchema) => {
-  const supabase = createClient();
   const { data, error } = await supabase
-    .from('product')
-    .update({
-      category,
-      heroImage,
-      imagesUrl,
-      maxQuantity,
-      price,
-      title,
-    })
-    .match({ slug });
+    .from('products')
+    .select(`
+      *,
+      category:category_id(*)
+    `)
+    .returns<ProductWithCategory[]>();
 
   if (error) {
-    throw new Error(`Error updating product: ${error.message}`);
+    throw new Error(`Error fetching products with categories: ${error.message}`);
   }
 
-  revalidatePath('/admin/products');
+  return data || [];
+};
+
+
+export const createProduct = async (newProduct: ProductSchema) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.from('products').insert(newProduct);
+
+  if (error) throw new Error(`Error creating product: ${error.message}`);
+
+  revalidatePath('/admin/inventory');
 
   return data;
 };
 
-export const deleteProduct = async (slug: string) => {
-  const supabase = createClient();
-  const { error } = await supabase.from('product').delete().match({ slug });
 
-  if (error) {
-    throw new Error(`Error deleting product: ${error.message}`);
-  }
+export const updateProduct = async (product: ProductSchema & { id: string }) => {
+  const supabase = await createClient();
 
-  revalidatePath('/admin/products');
+  const { data, error } = await supabase
+    .from("products")
+    .update(product)
+    .eq("id", product.id);
+
+  if (error) throw new Error(`Error updating product: ${error.message}`);
+
+  // revalidate the inventory page so updated data is visible
+  revalidatePath("/admin/inventory");
+
+  return data;
 };
